@@ -48,7 +48,7 @@ function Snake() {
         var cx = Math.floor(w / 2);
         var cy = Math.floor(h / 2);
         for (var i = -1; i <= 1; i++) {
-            var cell = {x: cx + i, y: cy, t: 's'};
+            var cell = {x: cx + i, y: cy, dx: -1, dy: 0, t: 's'};
             body.push(cell);
             drawCell(cell);
         }
@@ -70,18 +70,25 @@ function Snake() {
         ctx.arc(x, y, r, 0, 2 * Math.PI, false);
         ctx.closePath();
         ctx.fill();
-        if (typeof(face) != 'undefined') {
+        if (cell.t == 's') {
             ctx.strokeStyle = '3px solid black';
-            ctx.beginPath();
-            ctx.arc(x, y, r - 3, Math.PI / 4, 3 * Math.PI / 4, false);
-            ctx.stroke();
-            ctx.fillStyle = 'black';
-            ctx.beginPath();
-            ctx.arc(x - r/2, y - r/2, r/7+1, 0, 2 * Math.PI, false);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x + r/2, y - r/2, r/7+1, 0, 2 * Math.PI, false);
-            ctx.fill();
+            if (typeof(face) != 'undefined') {
+                ctx.beginPath();
+                ctx.arc(x, y, r - 3, Math.PI / 4, 3 * Math.PI / 4, false);
+                ctx.stroke();
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(x - r/2, y - r/2, r/7+1, 0, 2 * Math.PI, false);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x + r/2, y - r/2, r/7+1, 0, 2 * Math.PI, false);
+                ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + cell.dx * r, y + cell.dy * r);
+                ctx.stroke();
+            }
         }
     }
     
@@ -105,7 +112,7 @@ function Snake() {
         }
         var newX = (body[0].x + dir.x + w) % w;
         var newY = (body[0].y + dir.y + h) % h;
-        var newHead = {x: newX, y: newY, t: 's'};
+        var newHead = {x: newX, y: newY, dx: dir.x, dy: dir.y, t: 's'};
         if (checkCollision(newHead)) {
             gameLost = true;
             alert("Game Over!\n\nscore: " + score);
@@ -122,7 +129,7 @@ function Snake() {
         }
         var tail = body.pop();
         eraseCell(tail);
-        if (Math.random() < 0.3) {
+        if (Math.random() < 0.2) {
             food.c -= 1;
             eraseCell(food);
             if (food.c == 0) {
