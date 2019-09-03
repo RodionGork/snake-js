@@ -54,8 +54,8 @@ function Snake() {
         }
         setInterval(makeMove, 200);
         document.addEventListener("keydown", onkey);
-        buttons.addEventListener("mousedown", btnClick);
-        buttons.addEventListener("touchstart", btnClick);
+        buttons.addEventListener("mousedown", mouseDown);
+        buttons.addEventListener("touchstart", touchStart);
         placeFood();
         score = 0;
         showScore();
@@ -149,9 +149,17 @@ function Snake() {
         }
     }
     
-    function btnClick(e) {
-        var x = (e.clientX - buttons.offsetHeight) / buttons.width;
-        var y = (e.clientY - buttons.offsetTop) / buttons.height;
+    function mouseDown(e) {
+        clickOrTap(e.clientX, e.clientY);
+    }
+    
+    function touchStart(e) {
+        clickOrTap(e.touches[0].clientX, e.touches[0].clientY);
+    }
+    
+    function clickOrTap(cx, cy) {
+        var x = (cx - buttons.offsetLeft) / buttons.width;
+        var y = (cy - buttons.offsetTop) / buttons.height;
         var points = [{x:.75, y:.5}, {x:.5, y:.25}, {x:.25, y:.5}, {x:.5, y:.75}];
         var best = -1;
         var bestVal = 2;
