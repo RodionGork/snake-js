@@ -1,26 +1,50 @@
 function Snake() {
-    var canvas = document.getElementsByTagName("canvas")[0];
+    var holder = document.getElementById("fieldHolder");
+    var vertLayout = window.innerWidth < window.innerHeight;
+    var fieldSize = vertLayout ? window.innerWidth : window.innerHeight;
+    holder.style.width = window.innerWidth + 'px';
+    holder.style.height = window.innerHeight + 'px';
+    var canvas = document.getElementById("field");
     var ctx = canvas.getContext("2d");
-
+    canvas.width = fieldSize;
+    canvas.height = fieldSize;
+    canvas.style.width = fieldSize + 'px';
+    canvas.style.height = fieldSize + 'px';
+    var status = document.getElementById("status");
+    status.style.width = canvas.style.width;
+    status.style.fontSize = Math.floor(fieldSize / 17) + 'px';
+    document.getElementById("gameover").style.lineHeight = fieldSize + 'px';
+    var buttons = document.getElementById("buttons");
+    if (vertLayout) {
+        buttons.style.top = canvas.style.height;
+        buttons.style.left = '0px';
+        buttons.style.width = canvas.style.width;
+        buttons.style.height = (window.innerHeight - fieldSize) + 'px';
+    } else {
+        buttons.style.top = '0px';
+        buttons.style.left = canvas.style.width;
+        buttons.style.width = (window.innerWidth - fieldSize) + 'px';
+        buttons.style.height = canvas.style.height;
+    }
     var winW = canvas.width;
     var winH = canvas.height;
+    console.log(winW + ' ' + winH + ' ' + fieldSize);
     var w = 25;
     var h = 25;
     var cellW = winW / w;
     var cellH = winH / h;
     var body = [];
     var dir = {x: -1, y: 0};
+    var dirs = [{x:1,y:0},{x:0,y:-1},{x:-1,y:0},{x:0,y:1}];
+    var keys = {'70': 0,'69': 1, '83': 2, '68': 3};
     var nextDir = null;
     var food = {x: 0, y: 0};
     var score = 0;
     var gameLost = false;
-    var bgrColor = '#443388';
-    var foodColor = ['#880000', '#772200', '#664411', '#556622',
-        '#448833', '#33AA44', '#22CC55', '#11EE66', '#00FF88', '#22FFAA'];
+    var foodColor = ['#880000', '#991100', '#AA3300', '#CC5500',
+        '#EE7700', '#CC9911', '#88BB22', '#55D833', '#33E844', '#11FF55'];
 
     function init() {
-        ctx.fillStyle = bgrColor;
-        ctx.fillRect(0, 0, winW, winH);
         var cx = Math.floor(w / 2);
         var cy = Math.floor(h / 2);
         for (var i = -1; i <= 1; i++) {
@@ -30,6 +54,7 @@ function Snake() {
         }
         setInterval(makeMove, 200);
         document.addEventListener("keydown", onkey);
+        buttons.addEventListener("mousedown", btnClick);
         placeFood();
         score = 0;
         showScore();
@@ -38,7 +63,7 @@ function Snake() {
     function drawCell(cell, face) {
         var x = Math.floor((cell.x + 0.5) * cellW);
         var y = Math.floor((cell.y + 0.5) * cellH);
-        var r = Math.floor(cellW / 2);
+        var r = Math.floor(cellW / 2 - 0.5);
         ctx.fillStyle = cell.t == 's' ? 'yellow' : foodColor[cell.c - 1];
         ctx.beginPath();
         ctx.arc(x, y, r, 0, 2 * Math.PI, false);
@@ -51,17 +76,20 @@ function Snake() {
             ctx.stroke();
             ctx.fillStyle = 'black';
             ctx.beginPath();
-            ctx.arc(x - r/2, y - r/2, 2, 0, 2 * Math.PI, false);
+            ctx.arc(x - r/2, y - r/2, r/7+1, 0, 2 * Math.PI, false);
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(x + r/2, y - r/2, 2, 0, 2 * Math.PI, false);
+            ctx.arc(x + r/2, y - r/2, r/7+1, 0, 2 * Math.PI, false);
             ctx.fill();
         }
     }
     
     function eraseCell(cell) {
-        ctx.fillStyle = bgrColor;
-        ctx.fillRect(cell.x * cellW, cell.y * cellH, cellW, cellH);
+        var x0 = Math.round(cell.x * cellW);
+        var y0 = Math.round(cell.y * cellH);
+        var x1 = Math.round((cell.x + 1) * cellW);
+        var y1 = Math.round((cell.y + 1) * cellH);
+        ctx.clearRect(x0, y0, x1 - x0, y1 - y0);
     }
     
     function makeMove() {
@@ -95,8 +123,8 @@ function Snake() {
         eraseCell(tail);
         if (Math.random() < 0.3) {
             food.c -= 1;
+            eraseCell(food);
             if (food.c == 0) {
-                eraseCell(food);
                 placeFood();
             } else {
                 drawCell(food);
@@ -114,16 +142,27 @@ function Snake() {
     }
     
     function onkey(e) {
-        switch(e.keyCode) {
-            case 69:
-                nextDir = {x: 0, y: -1}; break;
-            case 83:
-                nextDir = {x: -1, y: 0}; break;
-            case 70:
-                nextDir = {x: 1, y: 0}; break;
-            case 68:
-                nextDir = {x: 0, y: 1}; break;
+        var k = '' + e.keyCode;
+        if (k in keys) {
+            nextDir = dirs[keys[k]];
         }
+    }
+    
+    function btnClick(e) {
+        var x = (e.clientX - buttons.offsetHeight) / buttons.width;
+        var y = (e.clientY - buttons.offsetTop) / buttons.height;
+        var points = [{x:.75, y:.5}, {x:.5, y:.25}, {x:.25, y:.5}, {x:.5, y:.75}];
+        var best = -1;
+        var bestVal = 2;
+        for (var i in points) {
+            var p = points[i];
+            var d = Math.hypot(p.x - x, p.y - y);
+            if (d < bestVal) {
+                best = i;
+                bestVal = d;
+            }
+        }
+        nextDir = dirs[best];
     }
     
     function placeFood() {
@@ -137,7 +176,7 @@ function Snake() {
                 }
             }
             if (!bad) {
-                food = {x: x, y: y, t: 'f', c: foodColor.length + 1};
+                food = {x: x, y: y, t: 'f', c: foodColor.length};
                 drawCell(food);
                 break;
             }
