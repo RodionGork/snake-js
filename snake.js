@@ -55,6 +55,7 @@ function Snake() {
         setInterval(makeMove, 200);
         document.addEventListener("keydown", onkey);
         buttons.addEventListener("mousedown", btnClick);
+        buttons.addEventListener("touchstart", btnClick);
         placeFood();
         score = 0;
         showScore();
