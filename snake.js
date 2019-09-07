@@ -39,6 +39,7 @@ function Snake() {
     var keys = {'70': 0,'69': 1, '83': 2, '68': 3};
     var nextDir = null;
     var food = {x: 0, y: 0};
+    var blocks = {};
     var score = 0;
     var gameLost = false;
     var foodColor = ['#880000', '#991100', '#AA3300', '#CC5500',
@@ -122,7 +123,18 @@ function Snake() {
         body.unshift(newHead);
         drawCell(newHead, true);
         if (newHead.x == food.x && newHead.y == food.y) {
-            score += food.c * (food.c + 1) / 2;
+            var newScore = score + food.c * (food.c + 1) / 2;
+            if (Math.floor(newScore / 1000) > Math.floor(score / 1000)) {
+                var k = Math.round(Math.random() * 4 + 4);
+                while (body.length > 3) {
+                    var tail = body.pop();
+                    eraseCell(tail);
+                    if (k-- > 0) {
+                        putBlock(tail);
+                    }
+                }
+            }
+            score = newScore;
             showScore();
             placeFood();
             return;
@@ -141,6 +153,9 @@ function Snake() {
     }
     
     function checkCollision(next) {
+        if (typeof(blocks[next.x + ' ' + next.y]) != 'undefined') {
+            return true;
+        }
         for (var i in body) {
             if (body[i].x == next.x && body[i].y == next.y) {
                 return true;
@@ -197,6 +212,14 @@ function Snake() {
                 break;
             }
         }
+    }
+    
+    function putBlock(c) {
+        blocks[c.x + ' ' + c.y] = 1;
+        ctx.fillStyle = '#555555';
+        var x0 = c.x * cellW;
+        var y0 = c.y * cellH;
+        ctx.fillRect(x0 + 1, y0 + 1, (c.x + 1) * cellW - x0 - 2, (c.y + 1) * cellH - y0 - 2);
     }
     
     function showScore() {
